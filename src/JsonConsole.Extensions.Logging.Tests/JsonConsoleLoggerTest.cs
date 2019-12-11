@@ -51,6 +51,21 @@ namespace JsonConsole.Extensions.Logging.Tests
             }));
         }
 
+        [Test]
+        public void Should_log_named_properties()
+        {
+            ILogger logger = _sut.CreateLogger("myCategory");
+            logger.LogInformation("This is a string property: {strProp}", "value");
+            logger.LogInformation("This is a numeric property: {numProp}", 456.789);
+            logger.LogInformation("This is a bool property: {boolProp}", true);
+
+            Assert.That(Pop(), Is.EqualTo(new[] {
+                "{'m':'This is a string property: value','l':'Information','t':'2019-12-11T20:25:00Z','c':'myCategory','strProp':'value'}",
+                "{'m':'This is a numeric property: 456.789','l':'Information','t':'2019-12-11T20:25:00Z','c':'myCategory','numProp':456.789}",
+                "{'m':'This is a bool property: True','l':'Information','t':'2019-12-11T20:25:00Z','c':'myCategory','boolProp':true}",
+            }));
+        }
+
         private string[] Pop()
         {
             var lines = _sb.ToString()

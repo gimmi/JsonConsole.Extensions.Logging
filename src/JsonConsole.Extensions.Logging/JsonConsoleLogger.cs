@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -36,6 +37,20 @@ namespace JsonConsole.Extensions.Logging
                     if (exception != null)
                     {
                         writer.WriteString("e", exception.ToString());
+                    }
+                    if (state is IEnumerable<KeyValuePair<string, object>> structure)
+                    {
+                        foreach (var property in structure)
+                        {
+                            var name = property.Key;
+                            if (string.IsNullOrWhiteSpace(property.Key) || name[0] == '{')
+                            {
+                                continue;
+                            }
+
+                            writer.WritePropertyName(name);
+                            JsonSerializer.Serialize(writer, property.Value);
+                        }
                     }
                     writer.WriteEndObject();
                 }
