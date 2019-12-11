@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 
 namespace JsonConsole.Extensions.Logging.Cli
 {
@@ -11,7 +12,8 @@ namespace JsonConsole.Extensions.Logging.Cli
             using var serviceProvider = new ServiceCollection()
                 .AddLogging(logging => {
                     logging.SetMinimumLevel(LogLevel.Trace);
-//                    logging.AddConsole();
+                    logging.AddFilter(typeof(Program).Namespace, LogLevel.Trace);
+                    //logging.AddConsole(console => { console.Format = ConsoleLoggerFormat.Systemd; });
                     logging.AddJsonConsole();
                 })
                 .BuildServiceProvider();

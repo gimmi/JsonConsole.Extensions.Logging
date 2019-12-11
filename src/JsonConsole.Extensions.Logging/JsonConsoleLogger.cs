@@ -3,15 +3,20 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions.Internal;
 
 namespace JsonConsole.Extensions.Logging
 {
     public class JsonConsoleLogger : ILogger
     {
+        private readonly Func<DateTime> _utcNowFn;
+        private readonly TextWriter _stdout;
         private readonly string _categoryName;
 
-        public JsonConsoleLogger(string categoryName)
+        public JsonConsoleLogger(Func<DateTime> utcNowFn, TextWriter stdout, string categoryName)
         {
+            _utcNowFn = utcNowFn;
+            _stdout = stdout;
             _categoryName = categoryName;
         }
 
@@ -26,7 +31,7 @@ namespace JsonConsole.Extensions.Logging
                     writer.WriteStartObject();
                     writer.WriteString("m", formattedMessage);
                     writer.WriteString("l", logLevel.ToString());
-                    writer.WriteString("t", DateTime.UtcNow);
+                    writer.WriteString("t", _utcNowFn.Invoke());
                     writer.WriteString("c", _categoryName);
                     if (exception != null)
                     {
@@ -36,7 +41,7 @@ namespace JsonConsole.Extensions.Logging
                 }
 
                 var json = Encoding.UTF8.GetString(stream.GetBuffer(), 0, (int) stream.Length);
-                Console.WriteLine(json);
+                _stdout.WriteLine(json);
             }
         }
 
@@ -47,7 +52,7 @@ namespace JsonConsole.Extensions.Logging
 
         public IDisposable BeginScope<TState>(TState state)
         {
-            return null;
+            return NullScope.Instance;
         }
     }
 }
