@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
@@ -7,9 +9,9 @@ namespace JsonConsole.Extensions.Logging.Cli
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            using var serviceProvider = new ServiceCollection()
+            var serviceProvider = new ServiceCollection()
                 .AddLogging(logging => {
                     logging.SetMinimumLevel(LogLevel.Trace);
                     logging.AddFilter(typeof(Program).Namespace, LogLevel.Trace);
@@ -20,19 +22,38 @@ namespace JsonConsole.Extensions.Logging.Cli
 
             var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
 
-            logger.LogTrace("This is Trace {par1,10:D4}; {}", 123, 456);
-            logger.LogDebug("This is Debug");
-            logger.LogInformation("This is Information");
-            logger.LogWarning("This is Warning");
+            var count = 1;
+            var ct = BindCtrlC();
+            while (await WaitNextAsync(1_000, ct))
+            {
+                logger.LogInformation("Log #{}", count++);
+            }
+
+            await serviceProvider.DisposeAsync();
+        }
+
+        public static CancellationToken BindCtrlC()
+        {
+            var stopCts = new CancellationTokenSource();
+            Console.CancelKeyPress += (s, e) => {
+                e.Cancel = true;
+                stopCts.Cancel();
+            };
+            return stopCts.Token;
+        }
+
+        public static async Task<bool> WaitNextAsync(int millisecondsDelay, CancellationToken ct)
+        {
             try
             {
-                throw new ApplicationException("AHHH!!");
+                await Task.Delay(millisecondsDelay, ct);
+                return true;
             }
-            catch (Exception e)
+            catch (OperationCanceledException)
             {
-                logger.LogError(e, "This is Error");
+                return false;
             }
-            logger.LogCritical("This is Critical");
         }
+
     }
 }
