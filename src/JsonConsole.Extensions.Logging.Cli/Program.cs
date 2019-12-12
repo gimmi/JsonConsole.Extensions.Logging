@@ -14,8 +14,9 @@ namespace JsonConsole.Extensions.Logging.Cli
             var serviceProvider = new ServiceCollection()
                 .AddLogging(logging => {
                     logging.SetMinimumLevel(LogLevel.Trace);
-                    logging.AddFilter(typeof(Program).Namespace, LogLevel.Trace);
-                    //logging.AddConsole(console => { console.Format = ConsoleLoggerFormat.Systemd; });
+                    // logging.AddFilter(typeof(Program).Namespace, LogLevel.Trace);
+                    // logging.AddConsole(console => { console.Format = ConsoleLoggerFormat.Systemd; });
+                    // logging.AddConsole(c => c.IncludeScopes = true);
                     logging.AddJsonConsole();
                 })
                 .BuildServiceProvider();
@@ -26,6 +27,8 @@ namespace JsonConsole.Extensions.Logging.Cli
             var ct = BindCtrlC();
             while (await WaitNextAsync(1_000, ct))
             {
+                using var scope1 = logger.BeginScope("Outer scope {outer}", 1);
+                using var scope2 = logger.BeginScope("Inner scope {inner}", 2);
                 logger.LogInformation("Log #{}", count++);
             }
 

@@ -5,17 +5,20 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions.Internal;
+using Microsoft.Extensions.Logging.Internal;
 
 namespace JsonConsole.Extensions.Logging
 {
     public class JsonConsoleLogger : ILogger
     {
+        private readonly IExternalScopeProvider _scopeProvider;
         private readonly Func<DateTime> _utcNowFn;
         private readonly TextWriter _stdout;
         private readonly string _categoryName;
 
-        public JsonConsoleLogger(Func<DateTime> utcNowFn, TextWriter stdout, string categoryName)
+        public JsonConsoleLogger(IExternalScopeProvider scopeProvider, Func<DateTime> utcNowFn, TextWriter stdout, string categoryName)
         {
+            _scopeProvider = scopeProvider;
             _utcNowFn = utcNowFn;
             _stdout = stdout;
             _categoryName = categoryName;
@@ -38,6 +41,9 @@ namespace JsonConsole.Extensions.Logging
                     {
                         writer.WriteString("e", exception.ToString());
                     }
+
+                    WriteFormattedLogValues(state, writer);
+
                     if (state is IEnumerable<KeyValuePair<string, object>> structure)
                     {
                         foreach (var property in structure)
@@ -52,6 +58,9 @@ namespace JsonConsole.Extensions.Logging
                             JsonSerializer.Serialize(writer, property.Value);
                         }
                     }
+
+                    _scopeProvider?.ForEachScope(WriteFormattedLogValues, writer);
+
                     writer.WriteEndObject();
                 }
 
@@ -67,7 +76,30 @@ namespace JsonConsole.Extensions.Logging
 
         public IDisposable BeginScope<TState>(TState state)
         {
-            return NullScope.Instance;
+            if (_scopeProvider == null)
+            {
+                return NullScope.Instance;
+            }
+
+            return _scopeProvider.Push(state);
+        }
+
+        private void WriteFormattedLogValues(object formattedLogValues, Utf8JsonWriter writer)
+        {
+            if (formattedLogValues is IEnumerable<KeyValuePair<string, object>> values)
+            {
+                foreach (var value in values)
+                {
+                    var name = value.Key;
+                    if (string.IsNullOrWhiteSpace(value.Key) || name[0] == '{')
+                    {
+                        continue;
+                    }
+
+                    writer.WritePropertyName(name);
+                    JsonSerializer.Serialize(writer, value.Value);
+                }
+            }
         }
     }
 }
