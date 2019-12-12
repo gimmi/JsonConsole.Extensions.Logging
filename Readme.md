@@ -1,3 +1,14 @@
+### Make NuGet
+
+```
+dotnet pack `
+    --configuration Release `
+    -p:Version=0.2.0-beta `
+    .\src\JsonConsole.Extensions.Logging\JsonConsole.Extensions.Logging.csproj
+```
+
+### Build CLI tool 
+
 ```
 dotnet publish -c Release .\src\JsonConsole.Extensions.Logging.Cli\JsonConsole.Extensions.Logging.Cli.csproj
 docker build --pull --tag jsonconsole:latest .\src\JsonConsole.Extensions.Logging.Cli
