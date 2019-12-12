@@ -16,6 +16,7 @@ namespace JsonConsole.Extensions.Logging.Tests
         {
             _sb = new StringBuilder();
             _sut = new JsonConsoleLoggerProvider(() => new DateTime(2019, 12, 11, 20, 25, 0, DateTimeKind.Utc), new StringWriter(_sb));
+            _sut.SetScopeProvider(new LoggerExternalScopeProvider());
         }
 
         [Test]
@@ -33,7 +34,7 @@ namespace JsonConsole.Extensions.Logging.Tests
         public void Should_format_log_message()
         {
             ILogger logger = _sut.CreateLogger("myCategory");
-            logger.LogInformation("par1={par1,10:D4}", 123);
+            logger.LogInformation("par1={,10:D4}", 123);
 
             Assert.That(Pop(), Is.EqualTo(new[] {
                 "{'m':'par1=      0123','l':'Information','t':'2019-12-11T20:25:00Z','c':'myCategory'}"
@@ -63,6 +64,24 @@ namespace JsonConsole.Extensions.Logging.Tests
                 "{'m':'This is a string property: value','l':'Information','t':'2019-12-11T20:25:00Z','c':'myCategory','strProp':'value'}",
                 "{'m':'This is a numeric property: 456.789','l':'Information','t':'2019-12-11T20:25:00Z','c':'myCategory','numProp':456.789}",
                 "{'m':'This is a bool property: True','l':'Information','t':'2019-12-11T20:25:00Z','c':'myCategory','boolProp':true}",
+            }));
+        }
+
+        [Test]
+        public void Should_include_scope_properties()
+        {
+            ILogger logger = _sut.CreateLogger("myCategory");
+
+            using (logger.BeginScope("{prop1}", "val1"))
+            {
+                using (logger.BeginScope("{prop2}", 456))
+                {
+                    logger.LogInformation("The message");
+                }
+            }
+
+            Assert.That(Pop(), Is.EqualTo(new[] {
+                "{'m':'The message','l':'Information','t':'2019-12-11T20:25:00Z','c':'myCategory','prop1':'val1','prop2':456}",
             }));
         }
 

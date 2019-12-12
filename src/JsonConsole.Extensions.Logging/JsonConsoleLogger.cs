@@ -44,21 +44,6 @@ namespace JsonConsole.Extensions.Logging
 
                     WriteFormattedLogValues(state, writer);
 
-                    if (state is IEnumerable<KeyValuePair<string, object>> structure)
-                    {
-                        foreach (var property in structure)
-                        {
-                            var name = property.Key;
-                            if (string.IsNullOrWhiteSpace(property.Key) || name[0] == '{')
-                            {
-                                continue;
-                            }
-
-                            writer.WritePropertyName(name);
-                            JsonSerializer.Serialize(writer, property.Value);
-                        }
-                    }
-
                     _scopeProvider?.ForEachScope(WriteFormattedLogValues, writer);
 
                     writer.WriteEndObject();
