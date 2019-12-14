@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -28,30 +29,22 @@ namespace JsonConsole.Extensions.Logging
         {
             var formattedMessage = formatter(state, exception);
 
-            using (var stream = new MemoryStream())
+            var dict = new Dictionary<string, object>();
+            dict["m"] = formattedMessage;
+            dict["l"] = logLevel.ToString();
+            dict["t"] = _utcNowFn.Invoke();
+            dict["c"] = _categoryName;
+            if (exception != null)
             {
-                using (var writer = new Utf8JsonWriter(stream))
-                {
-                    writer.WriteStartObject();
-                    writer.WriteString("m", formattedMessage);
-                    writer.WriteString("l", logLevel.ToString());
-                    writer.WriteString("t", _utcNowFn.Invoke());
-                    writer.WriteString("c", _categoryName);
-                    if (exception != null)
-                    {
-                        writer.WriteString("e", exception.ToString());
-                    }
-
-                    WriteFormattedLogValues(state, writer);
-
-                    _scopeProvider?.ForEachScope(WriteFormattedLogValues, writer);
-
-                    writer.WriteEndObject();
-                }
-
-                var json = Encoding.UTF8.GetString(stream.GetBuffer(), 0, (int) stream.Length);
-                _stdout.WriteLine(json);
+                dict["e"] = exception?.ToString();
             }
+
+            WriteFormattedLogValues(state, dict);
+
+            _scopeProvider?.ForEachScope(WriteFormattedLogValues, dict);
+
+            var json = JsonSerializer.Serialize(dict);
+            _stdout.WriteLine(json);
         }
 
         public bool IsEnabled(LogLevel logLevel)
@@ -69,7 +62,7 @@ namespace JsonConsole.Extensions.Logging
             return _scopeProvider.Push(state);
         }
 
-        private void WriteFormattedLogValues(object formattedLogValues, Utf8JsonWriter writer)
+        private void WriteFormattedLogValues(object formattedLogValues, Dictionary<string, object> dict)
         {
             if (formattedLogValues is IEnumerable<KeyValuePair<string, object>> values)
             {
@@ -81,8 +74,7 @@ namespace JsonConsole.Extensions.Logging
                         continue;
                     }
 
-                    writer.WritePropertyName(name);
-                    JsonSerializer.Serialize(writer, value.Value);
+                    dict[name] = value.Value;
                 }
             }
         }
