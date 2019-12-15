@@ -36,7 +36,7 @@ namespace JsonConsole.Extensions.Logging
             dict["c"] = _categoryName;
             if (exception != null)
             {
-                dict["e"] = exception?.ToString();
+                dict["x"] = exception?.ToString();
             }
 
             WriteFormattedLogValues(state, dict);

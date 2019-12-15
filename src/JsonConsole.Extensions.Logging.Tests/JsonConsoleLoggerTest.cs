@@ -48,7 +48,7 @@ namespace JsonConsole.Extensions.Logging.Tests
             logger.LogError(new ApplicationException("AHHH!!"), "This is an error");
 
             Assert.That(Pop(), Is.EqualTo(new[] {
-                "{'m':'This is an error','l':'Error','t':'2019-12-11T20:25:00Z','c':'myCategory','e':'System.ApplicationException: AHHH!!'}"
+                "{'m':'This is an error','l':'Error','t':'2019-12-11T20:25:00Z','c':'myCategory','x':'System.ApplicationException: AHHH!!'}"
             }));
         }
 
