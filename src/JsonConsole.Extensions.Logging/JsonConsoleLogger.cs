@@ -27,6 +27,7 @@ namespace JsonConsole.Extensions.Logging
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
+
             var formattedMessage = formatter(state, exception);
 
             var dict = new Dictionary<string, object>();
@@ -37,6 +38,11 @@ namespace JsonConsole.Extensions.Logging
             if (exception != null)
             {
                 dict["x"] = exception?.ToString();
+            }
+
+            if (eventId != default)
+            {
+                dict["i"] = eventId.ToString();
             }
 
             WriteFormattedLogValues(state, dict);

@@ -31,6 +31,19 @@ namespace JsonConsole.Extensions.Logging.Tests
         }
 
         [Test]
+        public void Should_log_eventid()
+        {
+            ILogger logger = _sut.CreateLogger("myCategory");
+            logger.LogInformation(123, "Msg");
+            logger.LogInformation(new EventId(456, "CustomEvent"), "Msg");
+
+            Assert.That(Pop(), Is.EqualTo(new[] {
+                "{'m':'Msg','l':'Information','t':'2019-12-11T20:25:00Z','c':'myCategory','i':'123'}",
+                "{'m':'Msg','l':'Information','t':'2019-12-11T20:25:00Z','c':'myCategory','i':'CustomEvent'}"
+            }));
+        }
+
+        [Test]
         public void Should_format_log_message()
         {
             ILogger logger = _sut.CreateLogger("myCategory");
