@@ -37,7 +37,7 @@ namespace JsonConsole.Extensions.Logging
             dict["c"] = _categoryName;
             if (exception != null)
             {
-                dict["x"] = exception?.ToString();
+                dict["x"] = exception.ToString();
             }
 
             if (eventId != default)
