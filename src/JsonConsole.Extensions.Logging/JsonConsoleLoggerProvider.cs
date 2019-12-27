@@ -9,19 +9,19 @@ namespace JsonConsole.Extensions.Logging
     {
         private readonly ConcurrentDictionary<string, JsonConsoleLogger> _loggers = new ConcurrentDictionary<string, JsonConsoleLogger>();
         private readonly Func<DateTime> _utcNowFn;
-        private readonly TextWriter _stdout;
+        private readonly Stream _stream;
 
         private IExternalScopeProvider _scopeProvider;
 
-        public JsonConsoleLoggerProvider(Func<DateTime> utcNowFn, TextWriter stdout)
+        public JsonConsoleLoggerProvider(Func<DateTime> utcNowFn, Stream stream)
         {
             _utcNowFn = utcNowFn;
-            _stdout = stdout;
+            _stream = stream;
         }
 
         public ILogger CreateLogger(string categoryName)
         {
-            return _loggers.GetOrAdd(categoryName, x => new JsonConsoleLogger(_scopeProvider, _utcNowFn, _stdout, x));
+            return _loggers.GetOrAdd(categoryName, x => new JsonConsoleLogger(_scopeProvider, _utcNowFn, _stream, x));
         }
 
         public void Dispose()

@@ -8,14 +8,14 @@ namespace JsonConsole.Extensions.Logging.Tests
 {
     public class JsonConsoleLoggerTest
     {
-        private StringBuilder _sb;
+        private Stream _stream;
         private JsonConsoleLoggerProvider _sut;
 
         [SetUp]
         public void Setup()
         {
-            _sb = new StringBuilder();
-            _sut = new JsonConsoleLoggerProvider(() => new DateTime(2019, 12, 11, 20, 25, 0, DateTimeKind.Utc), new StringWriter(_sb));
+            _stream = new MemoryStream();
+            _sut = new JsonConsoleLoggerProvider(() => new DateTime(2019, 12, 11, 20, 25, 0, DateTimeKind.Utc), _stream);
             _sut.SetScopeProvider(new LoggerExternalScopeProvider());
         }
 
@@ -100,10 +100,11 @@ namespace JsonConsole.Extensions.Logging.Tests
 
         private string[] Pop()
         {
-            var lines = _sb.ToString()
+            _stream.Seek(0, SeekOrigin.Begin);
+            var lines = new StreamReader(_stream)
+                .ReadToEnd()
                 .Replace("\"", "'")
                 .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-            _sb.Clear();
             return lines;
         }
     }

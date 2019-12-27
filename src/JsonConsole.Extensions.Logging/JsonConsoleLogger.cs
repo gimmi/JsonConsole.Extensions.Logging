@@ -12,45 +12,51 @@ namespace JsonConsole.Extensions.Logging
 {
     public class JsonConsoleLogger : ILogger
     {
+        private static readonly byte[] Newline = Encoding.UTF8.GetBytes(Environment.NewLine);
+
         private readonly IExternalScopeProvider _scopeProvider;
         private readonly Func<DateTime> _utcNowFn;
-        private readonly TextWriter _stdout;
+        private readonly Stream _stream;
         private readonly string _categoryName;
 
-        public JsonConsoleLogger(IExternalScopeProvider scopeProvider, Func<DateTime> utcNowFn, TextWriter stdout, string categoryName)
+        public JsonConsoleLogger(IExternalScopeProvider scopeProvider, Func<DateTime> utcNowFn, Stream stream, string categoryName)
         {
             _scopeProvider = scopeProvider;
             _utcNowFn = utcNowFn;
-            _stdout = stdout;
+            _stream = stream;
             _categoryName = categoryName;
         }
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-
             var formattedMessage = formatter(state, exception);
 
-            var dict = new Dictionary<string, object>();
-            dict["m"] = formattedMessage;
-            dict["l"] = logLevel.ToString();
-            dict["t"] = _utcNowFn.Invoke();
-            dict["c"] = _categoryName;
-            if (exception != null)
+            using (var writer = new Utf8JsonWriter(_stream))
             {
-                dict["x"] = exception.ToString();
+                writer.WriteStartObject();
+                writer.WriteString("m", formattedMessage);
+                writer.WriteString("l", logLevel.ToString());
+                writer.WriteString("t", _utcNowFn.Invoke());
+                writer.WriteString("c", _categoryName);
+
+                if (eventId != default)
+                {
+                    writer.WriteString("i", eventId.ToString());
+                }
+
+                if (exception != null)
+                {
+                    writer.WriteString("x", exception.ToString());
+                }
+
+                WriteFormattedLogValues(state, writer);
+
+                _scopeProvider?.ForEachScope(WriteFormattedLogValues, writer);
+
+                writer.WriteEndObject();
             }
 
-            if (eventId != default)
-            {
-                dict["i"] = eventId.ToString();
-            }
-
-            WriteFormattedLogValues(state, dict);
-
-            _scopeProvider?.ForEachScope(WriteFormattedLogValues, dict);
-
-            var json = JsonSerializer.Serialize(dict);
-            _stdout.WriteLine(json);
+            _stream.Write(Newline, 0, Newline.Length);
         }
 
         public bool IsEnabled(LogLevel logLevel)
@@ -68,7 +74,7 @@ namespace JsonConsole.Extensions.Logging
             return _scopeProvider.Push(state);
         }
 
-        private void WriteFormattedLogValues(object formattedLogValues, Dictionary<string, object> dict)
+        private void WriteFormattedLogValues(object formattedLogValues, Utf8JsonWriter writer)
         {
             if (formattedLogValues is IEnumerable<KeyValuePair<string, object>> values)
             {
@@ -80,7 +86,8 @@ namespace JsonConsole.Extensions.Logging
                         continue;
                     }
 
-                    dict[name] = value.Value;
+                    writer.WritePropertyName(name);
+                    JsonSerializer.Serialize(writer, value.Value);
                 }
             }
         }
