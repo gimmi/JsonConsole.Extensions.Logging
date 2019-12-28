@@ -11,7 +11,7 @@ namespace JsonConsole.Extensions.Logging
         private readonly Func<DateTime> _utcNowFn;
         private readonly Stream _stream;
 
-        private IExternalScopeProvider _scopeProvider;
+        private IExternalScopeProvider? _scopeProvider;
 
         public JsonConsoleLoggerProvider(Func<DateTime> utcNowFn, Stream stream)
         {

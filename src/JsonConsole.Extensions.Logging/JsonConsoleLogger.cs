@@ -14,12 +14,12 @@ namespace JsonConsole.Extensions.Logging
     {
         private static readonly byte[] Newline = Encoding.UTF8.GetBytes(Environment.NewLine);
 
-        private readonly IExternalScopeProvider _scopeProvider;
+        private readonly IExternalScopeProvider? _scopeProvider;
         private readonly Func<DateTime> _utcNowFn;
         private readonly Stream _stream;
         private readonly string _categoryName;
 
-        public JsonConsoleLogger(IExternalScopeProvider scopeProvider, Func<DateTime> utcNowFn, Stream stream, string categoryName)
+        public JsonConsoleLogger(IExternalScopeProvider? scopeProvider, Func<DateTime> utcNowFn, Stream stream, string categoryName)
         {
             _scopeProvider = scopeProvider;
             _utcNowFn = utcNowFn;
@@ -72,7 +72,7 @@ namespace JsonConsole.Extensions.Logging
             return _scopeProvider.Push(state);
         }
 
-        private void WriteFormattedLogValues(object formattedLogValues, Utf8JsonWriter writer)
+        private void WriteFormattedLogValues(object? formattedLogValues, Utf8JsonWriter writer)
         {
             if (formattedLogValues is IEnumerable<KeyValuePair<string, object>> values)
             {

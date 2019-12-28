@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using Microsoft.Extensions.Logging;
@@ -8,11 +9,11 @@ namespace JsonConsole.Extensions.Logging.Tests
 {
     public class JsonConsoleLoggerTest
     {
-        private Stream _stream;
-        private JsonConsoleLoggerProvider _sut;
+        private Stream? _stream;
+        private JsonConsoleLoggerProvider? _sut;
 
         [SetUp]
-        public void Setup()
+        public void SetUp()
         {
             _stream = new MemoryStream();
             _sut = new JsonConsoleLoggerProvider(() => new DateTime(2019, 12, 11, 20, 25, 0, DateTimeKind.Utc), _stream);
@@ -22,7 +23,7 @@ namespace JsonConsole.Extensions.Logging.Tests
         [Test]
         public void Should_log_plain_information()
         {
-            ILogger logger = _sut.CreateLogger("myCategory");
+            ILogger logger = _sut!.CreateLogger("myCategory");
             logger.LogInformation("This is an information");
 
             Assert.That(Pop(), Is.EqualTo(new[] {
@@ -33,7 +34,7 @@ namespace JsonConsole.Extensions.Logging.Tests
         [Test]
         public void Should_log_eventid()
         {
-            ILogger logger = _sut.CreateLogger("myCategory");
+            ILogger logger = _sut!.CreateLogger("myCategory");
             logger.LogInformation(123, "Msg");
             logger.LogInformation(new EventId(456, "CustomEvent"), "Msg");
 
@@ -46,7 +47,7 @@ namespace JsonConsole.Extensions.Logging.Tests
         [Test]
         public void Should_format_log_message()
         {
-            ILogger logger = _sut.CreateLogger("myCategory");
+            ILogger logger = _sut!.CreateLogger("myCategory");
             logger.LogInformation("par1={,10:D4}", 123);
 
             Assert.That(Pop(), Is.EqualTo(new[] {
@@ -57,7 +58,7 @@ namespace JsonConsole.Extensions.Logging.Tests
         [Test]
         public void Should_log_exception()
         {
-            ILogger logger = _sut.CreateLogger("myCategory");
+            ILogger logger = _sut!.CreateLogger("myCategory");
             logger.LogError(new ApplicationException("AHHH!!"), "This is an error");
 
             Assert.That(Pop(), Is.EqualTo(new[] {
@@ -68,7 +69,7 @@ namespace JsonConsole.Extensions.Logging.Tests
         [Test]
         public void Should_log_named_properties()
         {
-            ILogger logger = _sut.CreateLogger("myCategory");
+            ILogger logger = _sut!.CreateLogger("myCategory");
             logger.LogInformation("This is a string property: {strProp}", "value");
             logger.LogInformation("This is a numeric property: {numProp}", 456.789);
             logger.LogInformation("This is a bool property: {boolProp}", true);
@@ -83,7 +84,7 @@ namespace JsonConsole.Extensions.Logging.Tests
         [Test]
         public void Should_include_scope_properties()
         {
-            ILogger logger = _sut.CreateLogger("myCategory");
+            ILogger logger = _sut!.CreateLogger("myCategory");
 
             using (logger.BeginScope("{prop1}", "val1"))
             {
@@ -100,7 +101,7 @@ namespace JsonConsole.Extensions.Logging.Tests
 
         private string[] Pop()
         {
-            _stream.Seek(0, SeekOrigin.Begin);
+            _stream!.Seek(0, SeekOrigin.Begin);
             var lines = new StreamReader(_stream)
                 .ReadToEnd()
                 .Replace("\"", "'")
