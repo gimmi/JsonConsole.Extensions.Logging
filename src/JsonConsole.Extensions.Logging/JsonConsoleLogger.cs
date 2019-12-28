@@ -29,11 +29,9 @@ namespace JsonConsole.Extensions.Logging
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            var formattedMessage = formatter(state, exception);
-
             _jsonWriter.WriteStartObject();
-            _jsonWriter.WriteString("m", formattedMessage);
-            _jsonWriter.WriteString("l", logLevel.ToString());
+            _jsonWriter.WriteString("m", formatter(state, exception));
+            _jsonWriter.WriteString("l", GetLogLevelString(logLevel));
             _jsonWriter.WriteString("t", _utcNowFn.Invoke());
             _jsonWriter.WriteString("c", _categoryName);
 
@@ -71,6 +69,27 @@ namespace JsonConsole.Extensions.Logging
             return _scopeProvider.Push(state);
         }
 
+        private static string GetLogLevelString(LogLevel logLevel)
+        {
+            switch (logLevel)
+            {
+                case LogLevel.Critical:
+                    return "Critical";
+                case LogLevel.Error:
+                    return "Error";
+                case LogLevel.Warning:
+                    return "Warning";
+                case LogLevel.Information:
+                    return "Information";
+                case LogLevel.Debug:
+                    return "Debug";
+                case LogLevel.Trace:
+                    return "Trace";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(logLevel));
+            }
+        }
+
         private void WriteFormattedLogValues(object? formattedLogValues, Utf8JsonWriter writer)
         {
             if (formattedLogValues is IEnumerable<KeyValuePair<string, object>> values)
@@ -78,13 +97,11 @@ namespace JsonConsole.Extensions.Logging
                 foreach (var value in values)
                 {
                     var name = value.Key;
-                    if (string.IsNullOrWhiteSpace(value.Key) || name[0] == '{')
+                    if (name.Length > 0 && name[0] != '{')
                     {
-                        continue;
+                        writer.WritePropertyName(name);
+                        JsonSerializer.Serialize(writer, value.Value);
                     }
-
-                    writer.WritePropertyName(name);
-                    JsonSerializer.Serialize(writer, value.Value);
                 }
             }
         }
