@@ -4,3 +4,4 @@
 /src/*/obj/
 /src/*.user
 /.vs/
+/src/JsonConsole.Extensions.Logging.Benchmarks/BenchmarkDotNet.Artifacts/
