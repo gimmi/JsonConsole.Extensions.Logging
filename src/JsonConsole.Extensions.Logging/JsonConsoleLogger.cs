@@ -1,23 +1,22 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions.Internal;
-using Microsoft.Extensions.Logging.Internal;
 
 namespace JsonConsole.Extensions.Logging
 {
     public class JsonConsoleLogger : ILogger
     {
-        private static readonly byte[] Newline = Encoding.UTF8.GetBytes(Environment.NewLine);
+        private static readonly byte[] NewLine = Encoding.UTF8.GetBytes(Environment.NewLine);
 
         private readonly IExternalScopeProvider? _scopeProvider;
         private readonly Func<DateTime> _utcNowFn;
         private readonly Stream _stream;
         private readonly string _categoryName;
+        private readonly Utf8JsonWriter _jsonWriter;
 
         public JsonConsoleLogger(IExternalScopeProvider? scopeProvider, Func<DateTime> utcNowFn, Stream stream, string categoryName)
         {
@@ -25,38 +24,38 @@ namespace JsonConsole.Extensions.Logging
             _utcNowFn = utcNowFn;
             _stream = stream;
             _categoryName = categoryName;
+            _jsonWriter = new Utf8JsonWriter(_stream);
         }
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
             var formattedMessage = formatter(state, exception);
 
-            using (var writer = new Utf8JsonWriter(_stream))
+            _jsonWriter.WriteStartObject();
+            _jsonWriter.WriteString("m", formattedMessage);
+            _jsonWriter.WriteString("l", logLevel.ToString());
+            _jsonWriter.WriteString("t", _utcNowFn.Invoke());
+            _jsonWriter.WriteString("c", _categoryName);
+
+            if (eventId != default)
             {
-                writer.WriteStartObject();
-                writer.WriteString("m", formattedMessage);
-                writer.WriteString("l", logLevel.ToString());
-                writer.WriteString("t", _utcNowFn.Invoke());
-                writer.WriteString("c", _categoryName);
-
-                if (eventId != default)
-                {
-                    writer.WriteString("i", eventId.ToString());
-                }
-
-                if (exception != null)
-                {
-                    writer.WriteString("x", exception.ToString());
-                }
-
-                WriteFormattedLogValues(state, writer);
-
-                _scopeProvider?.ForEachScope(WriteFormattedLogValues, writer);
-
-                writer.WriteEndObject();
+                _jsonWriter.WriteString("i", eventId.ToString());
             }
 
-            _stream.Write(Newline, 0, Newline.Length);
+            if (exception != null)
+            {
+                _jsonWriter.WriteString("x", exception.ToString());
+            }
+
+            WriteFormattedLogValues(state, _jsonWriter);
+
+            _scopeProvider?.ForEachScope(WriteFormattedLogValues, _jsonWriter);
+
+            _jsonWriter.WriteEndObject();
+            _jsonWriter.Flush();
+            _jsonWriter.Reset();
+
+            _stream.Write(NewLine, 0, NewLine.Length);
         }
 
         // See https://github.com/aspnet/Extensions/blob/dc9a65e/src/Logging/Logging.Console/src/ConsoleLogger.cs#L225
