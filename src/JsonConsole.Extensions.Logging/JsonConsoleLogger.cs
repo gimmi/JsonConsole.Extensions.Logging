@@ -59,10 +59,8 @@ namespace JsonConsole.Extensions.Logging
             _stream.Write(Newline, 0, Newline.Length);
         }
 
-        public bool IsEnabled(LogLevel logLevel)
-        {
-            return true;
-        }
+        // See https://github.com/aspnet/Extensions/blob/dc9a65e/src/Logging/Logging.Console/src/ConsoleLogger.cs#L225
+        public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None;
 
         public IDisposable BeginScope<TState>(TState state)
         {
