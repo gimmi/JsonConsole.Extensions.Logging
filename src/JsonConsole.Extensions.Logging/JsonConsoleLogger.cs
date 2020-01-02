@@ -29,36 +29,41 @@ namespace JsonConsole.Extensions.Logging
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            _jsonWriter.WriteStartObject();
-            _jsonWriter.WriteString("m", formatter(state, exception));
-            _jsonWriter.WriteString("l", GetLogLevelString(logLevel));
-            _jsonWriter.WriteString("t", _utcNowFn.Invoke());
-            _jsonWriter.WriteString("c", _categoryName);
-
-            // This could really be just eventId.ToString() but this is to save on allocation
-            if (eventId.Name != default)
+            var m = formatter(state, exception);
+            var x = exception?.ToString();
+            lock (_jsonWriter)
             {
-                _jsonWriter.WriteString("i", eventId.Name);
+                _jsonWriter.WriteStartObject();
+                _jsonWriter.WriteString("m", m);
+                _jsonWriter.WriteString("l", GetLogLevelString(logLevel));
+                _jsonWriter.WriteString("t", _utcNowFn.Invoke());
+                _jsonWriter.WriteString("c", _categoryName);
+
+                // This could really be just eventId.ToString() but this is to save on allocation
+                if (eventId.Name != default)
+                {
+                    _jsonWriter.WriteString("i", eventId.Name);
+                }
+                else if (eventId.Id != default)
+                {
+                    _jsonWriter.WriteNumber("i", eventId.Id);
+                }
+
+                if (x != default)
+                {
+                    _jsonWriter.WriteString("x", x);
+                }
+
+                WriteFormattedLogValues(state, _jsonWriter);
+
+                _scopeProvider?.ForEachScope(WriteFormattedLogValues, _jsonWriter);
+
+                _jsonWriter.WriteEndObject();
+                _jsonWriter.Flush();
+                _jsonWriter.Reset();
+
+                _stream.Write(NewLine, 0, NewLine.Length);
             }
-            else if (eventId.Id != default)
-            {
-                _jsonWriter.WriteNumber("i", eventId.Id);
-            }
-
-            if (exception != null)
-            {
-                _jsonWriter.WriteString("x", exception.ToString());
-            }
-
-            WriteFormattedLogValues(state, _jsonWriter);
-
-            _scopeProvider?.ForEachScope(WriteFormattedLogValues, _jsonWriter);
-
-            _jsonWriter.WriteEndObject();
-            _jsonWriter.Flush();
-            _jsonWriter.Reset();
-
-            _stream.Write(NewLine, 0, NewLine.Length);
         }
 
         // See https://github.com/aspnet/Extensions/blob/dc9a65e/src/Logging/Logging.Console/src/ConsoleLogger.cs#L225

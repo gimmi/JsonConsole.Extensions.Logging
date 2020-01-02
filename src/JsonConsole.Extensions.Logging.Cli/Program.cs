@@ -9,6 +9,8 @@ namespace JsonConsole.Extensions.Logging.Cli
 {
     public class Program
     {
+        private const int DelayBetweenLogsMs = 100;
+
         public static async Task Main(string[] args)
         {
             var serviceProvider = new ServiceCollection()
@@ -23,14 +25,12 @@ namespace JsonConsole.Extensions.Logging.Cli
 
             var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
 
-            var count = 1;
             var ct = BindCtrlC();
-            while (await WaitNextAsync(1_000, ct))
-            {
-                using var scope1 = logger.BeginScope("Outer scope {outer}", 1);
-                using var scope2 = logger.BeginScope("Inner scope {inner}", 2);
-                logger.LogInformation("Log #{}", count++);
-            }
+
+            await Task.WhenAll(
+                Task.Run(() => Run(logger, 1, ct), ct),
+                Task.Run(() => Run(logger, 2, ct), ct)
+            );
 
             await serviceProvider.DisposeAsync();
         }
@@ -58,5 +58,15 @@ namespace JsonConsole.Extensions.Logging.Cli
             }
         }
 
+        public static async Task Run(ILogger logger, int workerId, CancellationToken ct)
+        {
+            var count = 1;
+            using var workerScope = logger.BeginScope("{workerId}", workerId);
+            while (await WaitNextAsync(DelayBetweenLogsMs, ct))
+            {
+                using var scope2 = logger.BeginScope("{innerScope}", "Something");
+                logger.LogInformation("Log #{}", count++);
+            }
+        }
     }
 }
