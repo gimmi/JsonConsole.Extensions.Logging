@@ -71,6 +71,7 @@ namespace JsonConsole.Extensions.Logging
 
         private static string GetLogLevelString(LogLevel logLevel)
         {
+            // This could really be just logLevel.ToString(), but with the case it saves some allocation
             switch (logLevel)
             {
                 case LogLevel.Critical:

@@ -19,3 +19,9 @@ Run interactively
 ```
 docker run -it --rm jsonconsole
 ```
+
+Run benchmarks
+
+```
+dotnet run --configuration Release --project .\src\JsonConsole.Extensions.Logging.Benchmarks -- --filter SingleLogEntry
+```
