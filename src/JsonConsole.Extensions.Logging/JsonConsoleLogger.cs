@@ -96,17 +96,19 @@ namespace JsonConsole.Extensions.Logging
             }
         }
 
-        private void WriteFormattedLogValues(object? formattedLogValues, Utf8JsonWriter writer)
+        private static void WriteFormattedLogValues(object? state, Utf8JsonWriter jsonWriter)
         {
-            if (formattedLogValues is IEnumerable<KeyValuePair<string, object>> values)
+            if (state is IReadOnlyList<KeyValuePair<string, object>> values)
             {
-                foreach (var value in values)
+                // foreach cause allocation, so avoid it
+                // ReSharper disable once ForCanBeConvertedToForeach
+                for (int i = 0; i < values.Count; i++)
                 {
-                    var name = value.Key;
+                    var name = values[i].Key;
                     if (name.Length > 0 && name[0] != '{')
                     {
-                        writer.WritePropertyName(name);
-                        JsonSerializer.Serialize(writer, value.Value);
+                        jsonWriter.WritePropertyName(name);
+                        JsonSerializer.Serialize(jsonWriter, values[i].Value);
                     }
                 }
             }
