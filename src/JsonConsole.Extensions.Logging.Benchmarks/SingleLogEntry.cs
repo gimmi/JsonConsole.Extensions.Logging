@@ -20,7 +20,7 @@ namespace JsonConsole.Extensions.Logging.Benchmarks
         [Benchmark]
         public void Run()
         {
-            _logger.Log(LogLevel.Information, "MyMsg");
+            _logger.Log(LogLevel.Information, 123, "MyMsg");
         }
     }
 }

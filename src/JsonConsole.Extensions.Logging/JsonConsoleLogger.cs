@@ -35,9 +35,14 @@ namespace JsonConsole.Extensions.Logging
             _jsonWriter.WriteString("t", _utcNowFn.Invoke());
             _jsonWriter.WriteString("c", _categoryName);
 
-            if (eventId != default)
+            // This could really be just eventId.ToString() but this is to save on allocation
+            if (eventId.Name != default)
             {
-                _jsonWriter.WriteString("i", eventId.ToString());
+                _jsonWriter.WriteString("i", eventId.Name);
+            }
+            else if (eventId.Id != default)
+            {
+                _jsonWriter.WriteNumber("i", eventId.Id);
             }
 
             if (exception != null)

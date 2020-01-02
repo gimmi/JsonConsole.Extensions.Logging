@@ -39,7 +39,7 @@ namespace JsonConsole.Extensions.Logging.Tests
             logger.LogInformation(new EventId(456, "CustomEvent"), "Msg");
 
             Assert.That(Pop(), Is.EqualTo(new[] {
-                "{'m':'Msg','l':'Information','t':'2019-12-11T20:25:00Z','c':'myCategory','i':'123'}",
+                "{'m':'Msg','l':'Information','t':'2019-12-11T20:25:00Z','c':'myCategory','i':123}",
                 "{'m':'Msg','l':'Information','t':'2019-12-11T20:25:00Z','c':'myCategory','i':'CustomEvent'}"
             }));
         }
