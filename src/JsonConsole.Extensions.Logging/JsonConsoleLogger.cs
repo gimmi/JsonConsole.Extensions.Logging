@@ -110,13 +110,25 @@ namespace JsonConsole.Extensions.Logging
                 for (int i = 0; i < values.Count; i++)
                 {
                     var name = values[i].Key;
-                    if (name.Length > 0 && name[0] != '{')
+                    if (IsValidPropertyName(name))
                     {
                         jsonWriter.WritePropertyName(name);
                         JsonSerializer.Serialize(jsonWriter, values[i].Value);
                     }
                 }
             }
+        }
+
+        private static bool IsValidPropertyName(string name)
+        {
+            return name?.Length > 0
+                   && name[0] != '{'
+                   && name != "m"
+                   && name != "l"
+                   && name != "t"
+                   && name != "c"
+                   && name != "i"
+                   && name != "x";
         }
     }
 }

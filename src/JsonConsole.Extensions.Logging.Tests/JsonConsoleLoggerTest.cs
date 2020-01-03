@@ -97,6 +97,17 @@ namespace JsonConsole.Extensions.Logging.Tests
             }));
         }
 
+        [Test]
+        public void Should_skip_standard_property_names()
+        {
+            ILogger logger = _sut!.CreateLogger("cat");
+            logger.LogInformation("{m}, {l}, {t}, {c}, {i}, {x}", "m", "l", "t", "c", "i", "x");
+
+            Assert.That(Pop(), Is.EqualTo(new[] {
+                "{'m':'m, l, t, c, i, x','l':'Information','t':'2019-12-11T20:25:00Z','c':'cat'}"
+            }));
+        }
+
         private string[] Pop()
         {
             _stream!.Seek(0, SeekOrigin.Begin);
