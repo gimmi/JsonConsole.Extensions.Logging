@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,10 +10,11 @@ namespace JsonConsole.Extensions.Logging.Cli
 {
     public class Program
     {
-        private const int DelayBetweenLogsMs = 100;
-
         public static async Task Main(string[] args)
         {
+            var workerCount = Convert.ToInt32(args.FirstOrDefault() ?? "1");
+            var delayBetweenLogsMs = Convert.ToInt32(args.Skip(1).FirstOrDefault() ?? "1000");
+
             var serviceProvider = new ServiceCollection()
                 .AddLogging(logging => {
                     logging.SetMinimumLevel(LogLevel.Trace);
@@ -25,12 +27,15 @@ namespace JsonConsole.Extensions.Logging.Cli
 
             var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
 
+            logger.LogInformation("workerCount: {} delayBetweenLogsMs: {}", workerCount, delayBetweenLogsMs);
+
             var ct = BindCtrlC();
 
-            await Task.WhenAll(
-                Task.Run(() => Run(logger, 1, ct), ct),
-                Task.Run(() => Run(logger, 2, ct), ct)
-            );
+            var workerTasks = Enumerable.Range(1, workerCount)
+                .Select(workerId => Task.Run(() => WorkerLoop(logger, workerId, ct, delayBetweenLogsMs), ct))
+                .ToList();
+
+            await Task.WhenAll(workerTasks);
 
             await serviceProvider.DisposeAsync();
         }
@@ -58,11 +63,11 @@ namespace JsonConsole.Extensions.Logging.Cli
             }
         }
 
-        public static async Task Run(ILogger logger, int workerId, CancellationToken ct)
+        public static async Task WorkerLoop(ILogger logger, int workerId, CancellationToken ct, int delayBetweenLogsMs)
         {
             var count = 1;
             using var workerScope = logger.BeginScope("{workerId}", workerId);
-            while (await WaitNextAsync(DelayBetweenLogsMs, ct))
+            while (await WaitNextAsync(delayBetweenLogsMs, ct))
             {
                 using var scope2 = logger.BeginScope("{innerScope}", "Something");
                 logger.LogInformation("Log #{}", count++);
