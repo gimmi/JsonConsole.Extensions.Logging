@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JsonConsole.Extensions.Logging
 {
-    public class JsonConsoleLoggerProvider : ILoggerProvider, ISupportExternalScope
+    internal class JsonConsoleLoggerProvider : ILoggerProvider, ISupportExternalScope
     {
         private readonly ConcurrentDictionary<string, JsonConsoleLogger> _loggers = new ConcurrentDictionary<string, JsonConsoleLogger>();
         private readonly Func<DateTime> _utcNowFn;

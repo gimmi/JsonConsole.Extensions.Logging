@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions.Internal;
 
 namespace JsonConsole.Extensions.Logging
 {
-    public class JsonConsoleLogger : ILogger
+    internal class JsonConsoleLogger : ILogger
     {
         private static readonly byte[] NewLine = Encoding.UTF8.GetBytes(Environment.NewLine);
 
