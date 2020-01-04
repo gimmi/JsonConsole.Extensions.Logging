@@ -108,6 +108,17 @@ namespace JsonConsole.Extensions.Logging.Tests
             }));
         }
 
+        [Test]
+        public void Should_write_unicode_chars_as_escape_sequences()
+        {
+            ILogger logger = _sut!.CreateLogger("cat");
+            logger.LogInformation("简 - Д - ∏ - ç - é - è - ñ");
+
+            Assert.That(Pop(), Is.EqualTo(new[] {
+                @"{'m':'\u7B80 - \u0414 - \u220F - \u00E7 - \u00E9 - \u00E8 - \u00F1','l':'Information','t':'2019-12-11T20:25:00Z','c':'cat'}"
+            }));
+        }
+
         private string[] Pop()
         {
             _stream!.Seek(0, SeekOrigin.Begin);
