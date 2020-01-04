@@ -10,14 +10,14 @@ dotnet pack `
 ### Build CLI tool 
 
 ```
-dotnet publish -c Release .\src\JsonConsole.Extensions.Logging.Cli\JsonConsole.Extensions.Logging.Cli.csproj
+dotnet publish -c Release .\src\JsonConsole.Extensions.Logging.Cli
 docker build --pull --tag jsonconsole:latest .\src\JsonConsole.Extensions.Logging.Cli
 ```
 
 Run interactively
 
 ```
-docker run -it --rm jsonconsole
+docker run -it --rm jsonconsole:latest
 ```
 
 Run benchmarks
