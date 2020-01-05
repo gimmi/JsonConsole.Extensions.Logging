@@ -1,3 +1,5 @@
+![GitHub](https://img.shields.io/github/license/gimmi/JsonConsole.Extensions.Logging) ![Nuget](https://img.shields.io/nuget/v/JsonConsole.Extensions.Logging) ![Nuget](https://img.shields.io/nuget/dt/JsonConsole.Extensions.Logging)
+
 ### Introduction
 
 This is a simple `Microsoft.Extensions.Logging` implementation that write JSON to the console.
