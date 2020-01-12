@@ -14,6 +14,10 @@ Install it from NuGet: https://www.nuget.org/packages/JsonConsole.Extensions.Log
 
 [MIT License](LICENSE)
 
+### How fast is this?
+
+See [Benchmanrks on Docker](docs/Docker-performances.md)
+
 ### Contribute
 
 ##### Build the NuGet package
@@ -38,7 +42,7 @@ docker build --pull --tag jsonconsole:latest .\src\JsonConsole.Extensions.Loggin
 docker run -it --rm jsonconsole:latest
 ```
 
-##### Run benchmarks
+##### Run micro benchmarks
 
 ```
 dotnet run `
