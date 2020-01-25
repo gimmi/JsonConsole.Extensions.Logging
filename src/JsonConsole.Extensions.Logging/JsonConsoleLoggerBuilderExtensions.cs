@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace JsonConsole.Extensions.Logging
 {
@@ -10,7 +9,8 @@ namespace JsonConsole.Extensions.Logging
             // For handling IDisposable use something like this:
             // https://github.com/serilog/serilog-extensions-logging/blob/54ff29a/src/Serilog.Extensions.Logging/SerilogLoggingBuilderExtensions.cs#L42
 
-            var provider = new JsonConsoleLoggerProvider(() => DateTime.UtcNow, Console.OpenStandardOutput());
+            var options = new JsonConsoleLoggerOptions();
+            var provider = new JsonConsoleLoggerProvider(options);
             loggingBuilder.AddProvider(provider);
             return loggingBuilder;
         }

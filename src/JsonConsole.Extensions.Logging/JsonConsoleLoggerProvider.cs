@@ -7,21 +7,19 @@ namespace JsonConsole.Extensions.Logging
 {
     internal class JsonConsoleLoggerProvider : ILoggerProvider, ISupportExternalScope
     {
+        private readonly JsonConsoleLoggerOptions _options;
         private readonly ConcurrentDictionary<string, JsonConsoleLogger> _loggers = new ConcurrentDictionary<string, JsonConsoleLogger>();
-        private readonly Func<DateTime> _utcNowFn;
-        private readonly Stream _stream;
 
         private IExternalScopeProvider? _scopeProvider;
 
-        public JsonConsoleLoggerProvider(Func<DateTime> utcNowFn, Stream stream)
+        public JsonConsoleLoggerProvider(JsonConsoleLoggerOptions options)
         {
-            _utcNowFn = utcNowFn;
-            _stream = stream;
+            _options = options;
         }
 
         public ILogger CreateLogger(string categoryName)
         {
-            return _loggers.GetOrAdd(categoryName, x => new JsonConsoleLogger(_scopeProvider, _utcNowFn, _stream, x));
+            return _loggers.GetOrAdd(categoryName, x => new JsonConsoleLogger(_scopeProvider, _options, x));
         }
 
         public void Dispose()

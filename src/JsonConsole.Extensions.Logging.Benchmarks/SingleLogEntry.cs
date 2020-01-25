@@ -13,7 +13,7 @@ namespace JsonConsole.Extensions.Logging.Benchmarks
         public SingleLogEntry()
         {
             var dateTime = new DateTime(2019, 12, 11, 20, 25, 0, DateTimeKind.Utc);
-            var loggerProvider = new JsonConsoleLoggerProvider(() => dateTime, Stream.Null);
+            var loggerProvider = new JsonConsoleLoggerProvider(new JsonConsoleLoggerOptions{ TimestampFieldName = "", Stream = Stream.Null });
             _logger = loggerProvider.CreateLogger("MyCategory");
         }
 

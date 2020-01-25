@@ -13,18 +13,16 @@ namespace JsonConsole.Extensions.Logging
         private static readonly byte[] NewLine = Encoding.UTF8.GetBytes(Environment.NewLine);
 
         private readonly IExternalScopeProvider? _scopeProvider;
-        private readonly Func<DateTime> _utcNowFn;
-        private readonly Stream _stream;
+        private readonly JsonConsoleLoggerOptions _options;
         private readonly string _categoryName;
         private readonly Utf8JsonWriter _jsonWriter;
 
-        public JsonConsoleLogger(IExternalScopeProvider? scopeProvider, Func<DateTime> utcNowFn, Stream stream, string categoryName)
+        public JsonConsoleLogger(IExternalScopeProvider? scopeProvider, JsonConsoleLoggerOptions options, string categoryName)
         {
             _scopeProvider = scopeProvider;
-            _utcNowFn = utcNowFn;
-            _stream = stream;
+            _options = options;
             _categoryName = categoryName;
-            _jsonWriter = new Utf8JsonWriter(_stream);
+            _jsonWriter = new Utf8JsonWriter(options.Stream);
         }
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
@@ -34,9 +32,12 @@ namespace JsonConsole.Extensions.Logging
             lock (_jsonWriter)
             {
                 _jsonWriter.WriteStartObject();
+                if (!string.IsNullOrWhiteSpace(_options.TimestampFieldName))
+                {
+                    _jsonWriter.WriteString(_options.TimestampFieldName, DateTime.UtcNow);
+                }
                 _jsonWriter.WriteString("m", m);
                 _jsonWriter.WriteString("l", GetLogLevelString(logLevel));
-                _jsonWriter.WriteString("t", _utcNowFn.Invoke());
                 _jsonWriter.WriteString("c", _categoryName);
 
                 // This could really be just eventId.ToString() but this is to save on allocation
@@ -62,7 +63,7 @@ namespace JsonConsole.Extensions.Logging
                 _jsonWriter.Flush();
                 _jsonWriter.Reset();
 
-                _stream.Write(NewLine, 0, NewLine.Length);
+                _options.Stream.Write(NewLine, 0, NewLine.Length);
             }
         }
 
@@ -101,7 +102,7 @@ namespace JsonConsole.Extensions.Logging
             }
         }
 
-        private static void WriteFormattedLogValues(object? state, Utf8JsonWriter jsonWriter)
+        private void WriteFormattedLogValues(object? state, Utf8JsonWriter jsonWriter)
         {
             if (state is IReadOnlyList<KeyValuePair<string, object>> values)
             {
@@ -119,13 +120,13 @@ namespace JsonConsole.Extensions.Logging
             }
         }
 
-        private static bool IsValidPropertyName(string name)
+        private bool IsValidPropertyName(string name)
         {
             return name?.Length > 0
                    && name[0] != '{'
                    && name != "m"
                    && name != "l"
-                   && name != "t"
+                   && name != _options.TimestampFieldName
                    && name != "c"
                    && name != "i"
                    && name != "x";
