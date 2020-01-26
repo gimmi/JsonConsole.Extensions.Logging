@@ -7,18 +7,18 @@ namespace JsonConsole.Extensions.Logging
     {
         public Stream Stream { get; set; } = Console.OpenStandardOutput();
 
-        public string TimestampFieldName { get; set; } = "t";
-        public string MessageFieldName { get; set; } = "m";
-        public string LevelFieldName { get; set; } = "l";
-        public string CategoryFieldName { get; set; } = "c";
-        public string EventIdFieldName { get; set; } = "i";
-        public string ExceptionFieldName { get; set; } = "x";
+        public string TimestampFieldName { get; set; } = "time";
+        public string MessageFieldName { get; set; } = "log";
+        public string LevelFieldName { get; set; } = "lvl";
+        public string CategoryFieldName { get; set; } = "cat";
+        public string EventIdFieldName { get; set; } = "evt";
+        public string ExceptionFieldName { get; set; } = "exc";
 
-        public string CriticalLevelName { get; set; } = "Critical";
-        public string ErrorLevelName { get; set; } = "Error";
-        public string WarningLevelName { get; set; } = "Warning";
-        public string InformationLevelName { get; set; } = "Information";
-        public string DebugLevelName { get; set; } = "Debug";
-        public string TraceLevelName { get; set; } = "Trace";
+        public string CriticalLevelName { get; set; } = "fatal";
+        public string ErrorLevelName { get; set; } = "error";
+        public string WarningLevelName { get; set; } = "warn";
+        public string InformationLevelName { get; set; } = "info";
+        public string DebugLevelName { get; set; } = "debug";
+        public string TraceLevelName { get; set; } = "trace";
     }
 }

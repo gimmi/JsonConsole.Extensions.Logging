@@ -29,7 +29,7 @@ namespace JsonConsole.Extensions.Logging.Tests
             ILogger logger = _sut!.CreateLogger("c");
             logger.LogInformation("m");
 
-            Assert.That(Pop().Single(), Does.Match(@"\{'timestamp':'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(.\d+)?Z','m':'m','l':'Information','c':'c'}"));
+            Assert.That(Pop().Single(), Does.Match(@"\{'timestamp':'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(.\d+)?Z','log':'m','lvl':'info','cat':'c'}"));
         }
 
         [Test]
@@ -39,7 +39,7 @@ namespace JsonConsole.Extensions.Logging.Tests
             logger.LogInformation("This is an information");
 
             Assert.That(Pop(), Is.EqualTo(new[] {
-                "{'m':'This is an information','l':'Information','c':'myCategory'}"
+                "{'log':'This is an information','lvl':'info','cat':'myCategory'}"
             }));
         }
 
@@ -51,8 +51,8 @@ namespace JsonConsole.Extensions.Logging.Tests
             logger.LogInformation(new EventId(456, "CustomEvent"), "Msg");
 
             Assert.That(Pop(), Is.EqualTo(new[] {
-                "{'m':'Msg','l':'Information','c':'myCategory','i':123}",
-                "{'m':'Msg','l':'Information','c':'myCategory','i':'CustomEvent'}"
+                "{'log':'Msg','lvl':'info','cat':'myCategory','evt':123}",
+                "{'log':'Msg','lvl':'info','cat':'myCategory','evt':'CustomEvent'}"
             }));
         }
 
@@ -63,7 +63,7 @@ namespace JsonConsole.Extensions.Logging.Tests
             logger.LogInformation("par1={,10:D4}", 123);
 
             Assert.That(Pop(), Is.EqualTo(new[] {
-                "{'m':'par1=      0123','l':'Information','c':'myCategory'}"
+                "{'log':'par1=      0123','lvl':'info','cat':'myCategory'}"
             }));
         }
 
@@ -74,7 +74,7 @@ namespace JsonConsole.Extensions.Logging.Tests
             logger.LogError(new ApplicationException("AHHH!!"), "This is an error");
 
             Assert.That(Pop(), Is.EqualTo(new[] {
-                "{'m':'This is an error','l':'Error','c':'myCategory','x':'System.ApplicationException: AHHH!!'}"
+                "{'log':'This is an error','lvl':'error','cat':'myCategory','exc':'System.ApplicationException: AHHH!!'}"
             }));
         }
 
@@ -87,9 +87,9 @@ namespace JsonConsole.Extensions.Logging.Tests
             logger.LogInformation("This is a bool property: {boolProp}", true);
 
             Assert.That(Pop(), Is.EqualTo(new[] {
-                "{'m':'This is a string property: value','l':'Information','c':'myCategory','strProp':'value'}",
-                "{'m':'This is a numeric property: 456.789','l':'Information','c':'myCategory','numProp':456.789}",
-                "{'m':'This is a bool property: True','l':'Information','c':'myCategory','boolProp':true}",
+                "{'log':'This is a string property: value','lvl':'info','cat':'myCategory','strProp':'value'}",
+                "{'log':'This is a numeric property: 456.789','lvl':'info','cat':'myCategory','numProp':456.789}",
+                "{'log':'This is a bool property: True','lvl':'info','cat':'myCategory','boolProp':true}",
             }));
         }
 
@@ -107,19 +107,18 @@ namespace JsonConsole.Extensions.Logging.Tests
             }
 
             Assert.That(Pop(), Is.EqualTo(new[] {
-                "{'m':'The message','l':'Information','c':'myCategory','prop1':'val1','prop2':456}",
+                "{'log':'The message','lvl':'info','cat':'myCategory','prop1':'val1','prop2':456}",
             }));
         }
 
         [Test]
         public void Should_skip_standard_property_names()
         {
+            _options!.TimestampFieldName = "time";
             ILogger logger = _sut!.CreateLogger("cat");
-            logger.LogInformation("{m}, {l}, {t}, {c}, {i}, {x}", "m", "l", "t", "c", "i", "x");
+            logger.LogInformation("{log}, {lvl}, {time}, {cat}, {evt}, {exc}", "m", "l", "t", "c", "i", "x");
 
-            Assert.That(Pop(), Is.EqualTo(new[] {
-                "{'m':'m, l, t, c, i, x','l':'Information','c':'cat','t':'t'}"
-            }));
+            Assert.That(Pop().Single(), Does.Match(@"\{'time':'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(.\d+)?Z','log':'m, l, t, c, i, x','lvl':'info','cat':'cat'}"));
         }
 
         [Test]
@@ -129,7 +128,7 @@ namespace JsonConsole.Extensions.Logging.Tests
             logger.LogInformation("简 - Д - ∏ - ç - é - è - ñ");
 
             Assert.That(Pop(), Is.EqualTo(new[] {
-                @"{'m':'\u7B80 - \u0414 - \u220F - \u00E7 - \u00E9 - \u00E8 - \u00F1','l':'Information','c':'cat'}"
+                @"{'log':'\u7B80 - \u0414 - \u220F - \u00E7 - \u00E9 - \u00E8 - \u00F1','lvl':'info','cat':'cat'}"
             }));
         }
 
