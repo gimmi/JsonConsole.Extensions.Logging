@@ -65,7 +65,7 @@ namespace JsonConsole.Extensions.Logging
 
                 if (!string.IsNullOrWhiteSpace(_options.ExceptionFieldName) && exception != default)
                 {
-                    _jsonWriter.WriteString("x", exception.ToString());
+                    _jsonWriter.WriteString(_options.ExceptionFieldName, exception.ToString());
                 }
 
                 WriteFormattedLogValues(state, _jsonWriter);
