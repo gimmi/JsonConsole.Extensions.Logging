@@ -27,8 +27,6 @@ namespace JsonConsole.Extensions.Logging
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            var m = formatter(state, exception);
-            var x = exception?.ToString();
             lock (_jsonWriter)
             {
                 _jsonWriter.WriteStartObject();
@@ -36,23 +34,38 @@ namespace JsonConsole.Extensions.Logging
                 {
                     _jsonWriter.WriteString(_options.TimestampFieldName, DateTime.UtcNow);
                 }
-                _jsonWriter.WriteString("m", m);
-                _jsonWriter.WriteString("l", GetLogLevelString(logLevel));
-                _jsonWriter.WriteString("c", _categoryName);
 
-                // This could really be just eventId.ToString() but this is to save on allocation
-                if (eventId.Name != default)
+                if (!string.IsNullOrWhiteSpace(_options.MessageFieldName))
                 {
-                    _jsonWriter.WriteString("i", eventId.Name);
-                }
-                else if (eventId.Id != default)
-                {
-                    _jsonWriter.WriteNumber("i", eventId.Id);
+                    _jsonWriter.WriteString(_options.MessageFieldName, formatter(state, exception));
                 }
 
-                if (x != default)
+                if (!string.IsNullOrWhiteSpace(_options.LevelFieldName))
                 {
-                    _jsonWriter.WriteString("x", x);
+                    _jsonWriter.WriteString(_options.LevelFieldName, GetLogLevelString(logLevel));
+                }
+
+                if (!string.IsNullOrWhiteSpace(_options.CategoryFieldName))
+                {
+                    _jsonWriter.WriteString(_options.CategoryFieldName, _categoryName);
+                }
+
+                if (!string.IsNullOrWhiteSpace(_options.EventIdFieldName))
+                {
+                    // This could really be just eventId.ToString() but this is to save on allocation
+                    if (eventId.Name != default)
+                    {
+                        _jsonWriter.WriteString(_options.EventIdFieldName, eventId.Name);
+                    }
+                    else if (eventId.Id != default)
+                    {
+                        _jsonWriter.WriteNumber(_options.EventIdFieldName, eventId.Id);
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(_options.ExceptionFieldName) && exception != default)
+                {
+                    _jsonWriter.WriteString("x", exception.ToString());
                 }
 
                 WriteFormattedLogValues(state, _jsonWriter);
@@ -80,23 +93,23 @@ namespace JsonConsole.Extensions.Logging
             return _scopeProvider.Push(state);
         }
 
-        private static string GetLogLevelString(LogLevel logLevel)
+        private string GetLogLevelString(LogLevel logLevel)
         {
             // This could really be just logLevel.ToString(), but with the case it saves some allocation
             switch (logLevel)
             {
                 case LogLevel.Critical:
-                    return "Critical";
+                    return _options.CriticalLevelName;
                 case LogLevel.Error:
-                    return "Error";
+                    return _options.ErrorLevelName;
                 case LogLevel.Warning:
-                    return "Warning";
+                    return _options.WarningLevelName;
                 case LogLevel.Information:
-                    return "Information";
+                    return _options.InformationLevelName;
                 case LogLevel.Debug:
-                    return "Debug";
+                    return _options.DebugLevelName;
                 case LogLevel.Trace:
-                    return "Trace";
+                    return _options.TraceLevelName;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(logLevel));
             }
@@ -122,14 +135,14 @@ namespace JsonConsole.Extensions.Logging
 
         private bool IsValidPropertyName(string name)
         {
-            return name?.Length > 0
+            return !string.IsNullOrWhiteSpace(name)
                    && name[0] != '{'
-                   && name != "m"
-                   && name != "l"
+                   && name != _options.MessageFieldName
+                   && name != _options.LevelFieldName
                    && name != _options.TimestampFieldName
-                   && name != "c"
-                   && name != "i"
-                   && name != "x";
+                   && name != _options.CategoryFieldName
+                   && name != _options.EventIdFieldName
+                   && name != _options.ExceptionFieldName;
         }
     }
 }
